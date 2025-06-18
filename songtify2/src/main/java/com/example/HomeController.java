@@ -72,37 +72,31 @@ public class HomeController {
     }
 
     private void initializePlaylist() {
-        // Add multiple songs, adjust paths according to your resources folder structure
-        URL song1Url = getClass().getResource("wsong1.mp3");
-        URL song2Url = getClass().getResource("wsong2.mp3");
-        URL song3Url = getClass().getResource("wsong3.mp3");
-        
-        if (song1Url != null) {
-            playlist.add(new Song("Save your Tears", "The Weeknd", defaultAlbumArt, song1Url.toString()));
-        } else {
-            System.err.println("Could not find wsong1.mp3");
-        }
-        
-        if (song2Url != null) {
-            playlist.add(new Song("Tetoris", "Kasane Teto", defaultAlbumArt, song2Url.toString()));
-        } else {
-            System.err.println("Could not find wsong2.mp3");
-        }
-        
-        if (song3Url != null) {
-            playlist.add(new Song("Third Song", "Artist 3", defaultAlbumArt, song3Url.toString()));
-        } else {
-            System.err.println("Could not find wsong3.mp3");
-        }
+    URL song1Url = getClass().getResource("wsong1.mp3");
+    URL song2Url = getClass().getResource("wsong2.mp3");
 
-        if (!playlist.isEmpty()) {
-            updateNowPlayingUI(playlist.get(0));
-            // Optionally start playing immediately
-            // playSong(0);
-        } else {
-            System.err.println("Playlist is empty!");
-        }
+    Image weekndArt = new Image(getClass().getResource("weeknd.jpg").toString());
+    Image tetoArt = new Image(getClass().getResource("Tetoris.jpg").toString());
+
+    if (song1Url != null) {
+        playlist.add(new Song("Save Your Tears", "The Weeknd", weekndArt, song1Url.toString()));
+    } else {
+        System.err.println("Could not find wsong1.mp3");
     }
+
+    if (song2Url != null) {
+        playlist.add(new Song("Tetoris", "Kasane Teto", tetoArt, song2Url.toString()));
+    } else {
+        System.err.println("Could not find wsong2.mp3");
+    }
+
+    if (!playlist.isEmpty()) {
+        updateNowPlayingUI(playlist.get(0));
+    } else {
+        System.err.println("Playlist is empty!");
+    }
+}
+
 
     // New method to populate the clickable song list
     private void populateSongList() {
