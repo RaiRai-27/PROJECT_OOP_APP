@@ -12,6 +12,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -30,9 +31,10 @@ public class HomeController {
     @FXML private Slider progressSlider;
     @FXML private Button playButton;
     @FXML private ImageView playPauseIcon;
-    @FXML private HBox recentlyPlayedContainer;
+    @FXML private javafx.scene.layout.GridPane recentlyPlayedContainer;
     @FXML private VBox playlistContainer;
     @FXML private Button createPlaylistButton;
+    @FXML private TextField searchField;
 
     private MediaPlayer mediaPlayer;
     private List<Song> playlist = new ArrayList<>();
@@ -47,6 +49,9 @@ public class HomeController {
     private Image skipImage;
     private Image defaultAlbumArt;
 
+    private final List<Song> likedSongs = new ArrayList<>();
+    private Playlist likedSongsPlaylist;
+
     @FXML
     public void initialize() {
         try {
@@ -59,6 +64,18 @@ public class HomeController {
             setupPlayerControls();
             initializePlaylist();
             populatePlaylists();
+
+            // --- Add this for search ---
+            if (searchField != null) {
+                searchField.textProperty().addListener((obs, oldText, newText) -> {
+                    filterSongList(newText);
+                });
+            }
+            // ---------------------------
+
+            // Add Liked Songs playlist
+            likedSongsPlaylist = new Playlist("Liked Songs", likedSongs);
+            playlists.add(likedSongsPlaylist);
         } catch (Exception e) {
             System.err.println("Initialization error: " + e.getMessage());
             e.printStackTrace();
@@ -74,24 +91,66 @@ public class HomeController {
     }
 
     private void initializePlaylist() {
-        URL song1Url = getClass().getResource("wsong1.mp3");
-        URL song2Url = getClass().getResource("wsong2.mp3");
+    URL song1Url = getClass().getResource("SaveyourTears.mp3");
+    URL song2Url = getClass().getResource("Tetoris.mp3");
+    URL song3Url = getClass().getResource("BlindingLights.mp3");
+    URL song4Url = getClass().getResource("ShapeOfYou.mp3");
+    URL song5Url = getClass().getResource("UptownFunk.mp3");
+    URL song6Url = getClass().getResource("RollingInTheDeep.mp3");
+    URL song7Url = getClass().getResource("Happy.mp3");
+    URL song8Url = getClass().getResource("CantStopTheFeeling.mp3");
+    URL song9Url = getClass().getResource("CountingStars.mp3");
+    URL song10Url = getClass().getResource("DanceMonkey.mp3");
 
-        Image weekndArt = new Image(getClass().getResource("weeknd.jpg").toString());
-        Image tetoArt = new Image(getClass().getResource("Tetoris.jpg").toString());
+    Image weekndArt = new Image(getClass().getResource("weeknd.jpg").toString());
+    Image tetoArt = new Image(getClass().getResource("Tetoris.jpg").toString());
+    Image genericArt = new Image(getClass().getResource("generic.jpg").toString()); // create a generic image or reuse one
 
-        if (song1Url != null) {
-            allSongs.add(new Song("Save Your Tears", "The Weeknd", weekndArt, song1Url.toString()));
-        }
-
-        if (song2Url != null) {
-            allSongs.add(new Song("Tetoris", "Kasane Teto", tetoArt, song2Url.toString()));
-        }
-
-        Playlist defaultPlaylist = new Playlist("All Songs", new ArrayList<>(allSongs));
-        playlists.add(defaultPlaylist);
-        setActivePlaylist(defaultPlaylist);
+    if (song1Url != null) {
+        allSongs.add(new Song("Save Your Tears", "The Weeknd", weekndArt, song1Url.toString()));
     }
+
+    if (song2Url != null) {
+        allSongs.add(new Song("Tetoris", "Kasane Teto", tetoArt, song2Url.toString()));
+    }
+
+    if (song3Url != null) {
+        allSongs.add(new Song("Blinding Lights", "The Weeknd", weekndArt, song3Url.toString()));
+    }
+
+    if (song4Url != null) {
+        allSongs.add(new Song("Shape of You", "Ed Sheeran", genericArt, song4Url.toString()));
+    }
+
+    if (song5Url != null) {
+        allSongs.add(new Song("Uptown Funk", "Mark Ronson ft. Bruno Mars", genericArt, song5Url.toString()));
+    }
+
+    if (song6Url != null) {
+        allSongs.add(new Song("Rolling in the Deep", "Adele", genericArt, song6Url.toString()));
+    }
+
+    if (song7Url != null) {
+        allSongs.add(new Song("Happy", "Pharrell Williams", genericArt, song7Url.toString()));
+    }
+
+    if (song8Url != null) {
+        allSongs.add(new Song("Can't Stop the Feeling!", "Justin Timberlake", genericArt, song8Url.toString()));
+    }
+
+    if (song9Url != null) {
+        allSongs.add(new Song("Counting Stars", "OneRepublic", genericArt, song9Url.toString()));
+    }
+
+    if (song10Url != null) {
+        allSongs.add(new Song("Dance Monkey", "Tones and I", genericArt, song10Url.toString()));
+    }
+
+    Playlist defaultPlaylist = new Playlist("All Songs", new ArrayList<>(allSongs));
+    playlists.add(defaultPlaylist);
+    setActivePlaylist(defaultPlaylist);
+}
+
 
     private void setActivePlaylist(Playlist selected) {
         this.playlist = selected.getSongs();
@@ -110,34 +169,59 @@ public class HomeController {
 
     private void populateSongList() {
         recentlyPlayedContainer.getChildren().clear();
-
+        int col = 0;
+        int row = 0;
         for (int i = 0; i < playlist.size(); i++) {
-            final int index = i;
             Song song = playlist.get(i);
+            VBox songBox = createSongBox(song, i); // your method to create a song card
 
-            VBox songBox = new VBox(5);
-            songBox.setStyle("-fx-background-color: #282828; -fx-padding: 10; -fx-background-radius: 10;");
-            songBox.setPrefWidth(150);
-            songBox.setCursor(Cursor.HAND);
+            recentlyPlayedContainer.add(songBox, col, row);
 
-            ImageView albumArt = new ImageView(song.getAlbumArt());
-            albumArt.setFitWidth(140);
-            albumArt.setFitHeight(140);
-            albumArt.setPreserveRatio(true);
-
-            Label title = new Label(song.getTitle());
-            title.setTextFill(Color.WHITE);
-            title.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
-
-            Label artist = new Label(song.getArtist());
-            artist.setTextFill(Color.LIGHTGRAY);
-            artist.setStyle("-fx-font-size: 12;");
-
-            songBox.getChildren().addAll(albumArt, title, artist);
-            songBox.setOnMouseClicked(event -> playSong(index));
-
-            recentlyPlayedContainer.getChildren().add(songBox);
+            col++;
+            if (col == 3) { // 3 songs per row
+                col = 0;
+                row++;
+            }
         }
+    }
+
+    private VBox createSongBox(Song song, int index) {
+        VBox songBox = new VBox(5);
+        songBox.setStyle("-fx-background-color: #282828; -fx-padding: 10; -fx-background-radius: 10;");
+        songBox.setPrefWidth(150);
+        songBox.setCursor(Cursor.HAND);
+
+        ImageView albumArt = new ImageView(song.getAlbumArt());
+        albumArt.setFitWidth(140);
+        albumArt.setFitHeight(140);
+        albumArt.setPreserveRatio(true);
+
+        Label title = new Label(song.getTitle());
+        title.setTextFill(Color.WHITE);
+        title.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
+
+        Label artist = new Label(song.getArtist());
+        artist.setTextFill(Color.LIGHTGRAY);
+        artist.setStyle("-fx-font-size: 12;");
+
+        // Like button
+        Button likeButton = new Button(likedSongs.contains(song) ? "♥" : "♡");
+        likeButton.setStyle("-fx-background-color: transparent; -fx-font-size: 18; -fx-text-fill: #1DB954;");
+        likeButton.setOnAction(e -> {
+            if (likedSongs.contains(song)) {
+                likedSongs.remove(song);
+                likeButton.setText("♡");
+            } else {
+                likedSongs.add(song);
+                likeButton.setText("♥");
+            }
+            populatePlaylists(); // Refresh playlists to update liked songs
+        });
+
+        songBox.getChildren().addAll(albumArt, title, artist, likeButton);
+        songBox.setOnMouseClicked(event -> playSong(index));
+
+        return songBox;
     }
 
     private void populatePlaylists() {
@@ -172,7 +256,10 @@ public class HomeController {
                 songListBox.getChildren().add(songLabel);
             }
 
-            playlistLabel.setOnMouseClicked(event -> songListBox.setVisible(!songListBox.isVisible()));
+            playlistLabel.setOnMouseClicked(event -> {
+                setActivePlaylist(pl);
+                songListBox.setVisible(!songListBox.isVisible());
+            });
 
             playlistBox.getChildren().addAll(playlistLabel, songListBox);
             playlistContainer.getChildren().add(playlistBox);
@@ -273,6 +360,44 @@ public class HomeController {
             populatePlaylists();
             setActivePlaylist(newPlaylist);
         });
+    }
+
+    private void filterSongList(String query) {
+        recentlyPlayedContainer.getChildren().clear();
+        List<Song> filtered = new ArrayList<>();
+        for (Song song : playlist) {
+            if (song.getTitle().toLowerCase().contains(query.toLowerCase()) ||
+                song.getArtist().toLowerCase().contains(query.toLowerCase())) {
+                filtered.add(song);
+            }
+        }
+        for (int i = 0; i < filtered.size(); i++) {
+            final int index = i;
+            Song song = filtered.get(i);
+
+            VBox songBox = new VBox(5);
+            songBox.setStyle("-fx-background-color: #282828; -fx-padding: 10; -fx-background-radius: 10;");
+            songBox.setPrefWidth(150);
+            songBox.setCursor(Cursor.HAND);
+
+            ImageView albumArt = new ImageView(song.getAlbumArt());
+            albumArt.setFitWidth(140);
+            albumArt.setFitHeight(140);
+            albumArt.setPreserveRatio(true);
+
+            Label title = new Label(song.getTitle());
+            title.setTextFill(Color.WHITE);
+            title.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
+
+            Label artist = new Label(song.getArtist());
+            artist.setTextFill(Color.LIGHTGRAY);
+            artist.setStyle("-fx-font-size: 12;");
+
+            songBox.getChildren().addAll(albumArt, title, artist);
+            songBox.setOnMouseClicked(event -> playSong(playlist.indexOf(song)));
+
+            recentlyPlayedContainer.getChildren().add(songBox);
+        }
     }
 
     public static class Song {
